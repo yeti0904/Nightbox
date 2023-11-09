@@ -27,7 +27,7 @@ set b 80
 out a b
 
 ; set screen colours to white text on black background
-set a 0x0F
+set a 0x07
 lda ds 0x18B5
 set c 3200
 setl a
