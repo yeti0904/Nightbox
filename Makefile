@@ -1,10 +1,10 @@
-compile: bin bin/bios.bin
+compile: bin/ bin/bios.bin
 
-bin:
+bin/:
 	mkdir -p bin
 
-bin/bios.bin: bios/bios.asm
-	yeti-16 asm bios/bios.asm -o bin/bios.bin
+bin/bios.bin:
+	cd bios; make
 
 clean:
 	rm -r bin
