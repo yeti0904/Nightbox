@@ -3,9 +3,7 @@
 ; Expects to be loaded at 0x050000
 
 ;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;
 ;         boot         ;
-;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;
 
 ; set video mode to 40x40 text mode (mode 0x00)
@@ -42,6 +40,13 @@ setl a
 lda sr boot_msg
 lda ds 1029
 call print_str
+
+; set up interrupt
+lda ab 68
+set c 1
+incp ab
+lda ef interrupt
+wra ab ef
 
 ; search for disks
 set d 0x16 ; iterator
@@ -94,9 +99,7 @@ end:
 	hlt
 
 ;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;
 ;       functions      ;
-;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;
 
 print_str:
@@ -113,4 +116,69 @@ print_str:
 print_str_end:
 	ret
 
+;;;;;;;;;;;;;;;;;;;;;;;;
+;          API         ;
+;;;;;;;;;;;;;;;;;;;;;;;;
+
+disk_api:
+	; Parameters
+	; a = API ID
+	; Changes: i
+	set i 0
+	cmp a i
+	jnz disk_api_read_disk
+	set i  1
+	cmp a i
+	jnz disk_api_write_disk
+	ret
+
+disk_api_read_disk:
+	; Parameters
+	; b  = sector start
+	; c  = amount of sectors
+	; d  = disk
+	; ds = location
+	; Changes: a, c, f
+	set a 82
+	out d a
+	out d b
+	out d c
+	set f 512
+	mul c f
+	in d
+disk_api_read_disk_loop:
+	in d
+	wrb ds d
+	dec c
+	incp ds
+	cpr a c
+	jz disk_api_read_disk_end
+	jmp disk_api_read_disk_loop
+disk_api_read_disk_end:
+	ret
+
+disk_api_write_disk:
+	; Parameters
+	; b  = sector
+	; d  = disk
+	; sr = location
+	; Changes: c
+	set a 82
+	out d a
+	out d b
+	set c 512
+disk_api_write_disk_loop:
+	rdb sr
+	out d a
+	dec c
+	incp sr
+	cpr a c
+	jz disk_api_write_disk_end
+	jmp disk_api_write_disk_loop
+disk_api_write_disk_end:
+	ret ; why did i not add local labels
+
+interrupt:
+	; TODO lol
+	ret
 
