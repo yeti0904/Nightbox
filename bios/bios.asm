@@ -60,7 +60,7 @@ disk_loop:
 	jmp disk_loop
 
 boot_disk:
-	lda ds 0x100000
+	lda ds 0x060000
 	set a 82
 	out d a
 	set a 0
@@ -78,7 +78,8 @@ read_disk:
 	cpr a c
 	jnz read_disk
 	; jump to booted disk
-	jmp 0x100000
+	set a 34
+	jmp 0x060000
 
 no_disk:
 	lda ds 1269
